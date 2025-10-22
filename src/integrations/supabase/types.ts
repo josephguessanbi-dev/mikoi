@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          user_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          user_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          user_type?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          bedrooms: number | null
+          city: string
+          created_at: string
+          description: string | null
+          district: string | null
+          id: string
+          images: string[] | null
+          listing_type: string
+          price: number
+          property_type: string
+          status: string | null
+          surface: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bedrooms?: number | null
+          city: string
+          created_at?: string
+          description?: string | null
+          district?: string | null
+          id?: string
+          images?: string[] | null
+          listing_type: string
+          price: number
+          property_type: string
+          status?: string | null
+          surface?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bedrooms?: number | null
+          city?: string
+          created_at?: string
+          description?: string | null
+          district?: string | null
+          id?: string
+          images?: string[] | null
+          listing_type?: string
+          price?: number
+          property_type?: string
+          status?: string | null
+          surface?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
