@@ -1,41 +1,57 @@
 import { Button } from "@/components/ui/button";
-import { Home, Menu, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Home, PlusCircle, LogOut, LogIn } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Déconnexion réussie",
+      description: "À bientôt sur MikoiCI",
+    });
+    navigate("/");
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border shadow-soft">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary">
-            <Home className="w-8 h-8" />
-            <span>MikoiCI</span>
+    <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <Home className="w-6 h-6 text-primary" />
+          <span className="text-xl font-bold">MikoiCI</span>
+        </Link>
+        
+        <div className="flex items-center gap-4">
+          <Link to="/listings">
+            <Button variant="ghost">Annonces</Button>
           </Link>
-
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-foreground hover:text-primary transition-colors">
-              Accueil
+          {user ? (
+            <>
+              <Link to="/publish">
+                <Button variant="hero" size="sm">
+                  <PlusCircle className="w-4 h-4" />
+                  Publier
+                </Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="w-4 h-4" />
+                Déconnexion
+              </Button>
+            </>
+          ) : (
+            <Link to="/auth">
+              <Button variant="hero" size="sm">
+                <LogIn className="w-4 h-4" />
+                Connexion
+              </Button>
             </Link>
-            <Link to="/listings" className="text-foreground hover:text-primary transition-colors">
-              Annonces
-            </Link>
-            <Link to="/publish" className="text-foreground hover:text-primary transition-colors">
-              Publier
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu />
-            </Button>
-            <Button variant="outline" size="sm" className="hidden md:flex">
-              <User className="w-4 h-4" />
-              Connexion
-            </Button>
-            <Button size="sm" className="hidden md:flex">
-              Inscription
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </nav>

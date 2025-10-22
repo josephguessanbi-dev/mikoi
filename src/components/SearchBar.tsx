@@ -1,9 +1,22 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, Home } from "lucide-react";
 
-const SearchBar = () => {
+interface SearchBarProps {
+  onSearch: (filters: { city: string; propertyType: string; maxPrice: string }) => void;
+}
+
+const SearchBar = ({ onSearch }: SearchBarProps) => {
+  const [city, setCity] = useState("");
+  const [propertyType, setPropertyType] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+
+  const handleSearch = () => {
+    onSearch({ city, propertyType, maxPrice });
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto">
       <div className="bg-card rounded-xl shadow-card p-6 space-y-4">
@@ -13,11 +26,12 @@ const SearchBar = () => {
               <MapPin className="w-4 h-4" />
               Ville
             </label>
-            <Select>
+            <Select value={city} onValueChange={setCity}>
               <SelectTrigger>
                 <SelectValue placeholder="Choisir une ville" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Toutes</SelectItem>
                 <SelectItem value="abidjan">Abidjan</SelectItem>
                 <SelectItem value="bouake">Bouaké</SelectItem>
                 <SelectItem value="yamoussoukro">Yamoussoukro</SelectItem>
@@ -32,11 +46,12 @@ const SearchBar = () => {
               <Home className="w-4 h-4" />
               Type de bien
             </label>
-            <Select>
+            <Select value={propertyType} onValueChange={setPropertyType}>
               <SelectTrigger>
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Tous</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
                 <SelectItem value="maison">Maison</SelectItem>
                 <SelectItem value="terrain">Terrain</SelectItem>
@@ -50,11 +65,16 @@ const SearchBar = () => {
             <label className="text-sm font-medium text-muted-foreground">
               Budget Max
             </label>
-            <Input type="number" placeholder="Ex: 500000 FCFA" />
+            <Input
+              type="number"
+              placeholder="Ex: 500000 FCFA"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+            />
           </div>
         </div>
 
-        <Button variant="hero" size="lg" className="w-full">
+        <Button variant="hero" size="lg" className="w-full" onClick={handleSearch}>
           <Search className="w-5 h-5" />
           Rechercher
         </Button>

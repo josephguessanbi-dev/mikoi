@@ -55,7 +55,7 @@ const Index = () => {
           </div>
 
           <div className="mt-16">
-            <SearchBar />
+            <SearchBar onSearch={() => {}} />
           </div>
         </div>
       </section>
