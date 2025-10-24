@@ -28,10 +28,9 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
             </label>
             <Select value={city} onValueChange={setCity}>
               <SelectTrigger>
-                <SelectValue placeholder="Choisir une ville" />
+                <SelectValue placeholder="Toutes les villes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes</SelectItem>
                 <SelectItem value="abidjan">Abidjan</SelectItem>
                 <SelectItem value="bouake">Bouaké</SelectItem>
                 <SelectItem value="yamoussoukro">Yamoussoukro</SelectItem>
@@ -48,10 +47,9 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
             </label>
             <Select value={propertyType} onValueChange={setPropertyType}>
               <SelectTrigger>
-                <SelectValue placeholder="Type" />
+                <SelectValue placeholder="Tous les types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous</SelectItem>
                 <SelectItem value="appartement">Appartement</SelectItem>
                 <SelectItem value="maison">Maison</SelectItem>
                 <SelectItem value="terrain">Terrain</SelectItem>

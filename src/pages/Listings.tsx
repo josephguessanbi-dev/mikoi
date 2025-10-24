@@ -15,6 +15,7 @@ interface Property {
   surface: number | null;
   images: string[];
   property_type: string;
+  listing_type: string;
 }
 
 const Listings = () => {
@@ -95,12 +96,12 @@ const Listings = () => {
                 key={property.id}
                 id={property.id}
                 title={property.title}
-                price={property.price}
+                price={property.price.toString()}
                 location={`${property.city}${property.district ? ", " + property.district : ""}`}
                 bedrooms={property.bedrooms || 0}
                 surface={property.surface || 0}
                 image={property.images[0] || "/placeholder.svg"}
-                type={property.property_type}
+                type={property.listing_type as "location" | "vente"}
               />
             ))}
           </div>
