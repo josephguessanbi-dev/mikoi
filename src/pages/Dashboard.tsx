@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Phone, Mail, Home, Edit, Trash2 } from "lucide-react";
+import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Sparkles } from "lucide-react";
+import { PaymentButton } from "@/components/PaymentButton";
 
 interface Profile {
   full_name: string | null;
@@ -271,6 +272,21 @@ const Dashboard = () => {
                         <Edit className="w-4 h-4" />
                         Modifier
                       </Button>
+                      <PaymentButton
+                        amount={5000}
+                        description={`Promouvoir: ${property.title}`}
+                        metadata={{
+                          property_id: property.id,
+                          action: "promote_listing"
+                        }}
+                        onSuccess={() => {
+                          toast({
+                            title: "Paiement réussi",
+                            description: "Votre annonce sera promue après validation du paiement",
+                          });
+                        }}
+                        className="w-full md:w-auto"
+                      />
                       <Button
                         variant="destructive"
                         size="sm"
