@@ -9,6 +9,7 @@ import Listings from "./pages/Listings";
 import ListingDetail from "./pages/ListingDetail";
 import Publish from "./pages/Publish";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/listing/:id" element={<ListingDetail />} />
             <Route path="/publish" element={<Publish />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

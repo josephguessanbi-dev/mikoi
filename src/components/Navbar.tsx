@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, LogOut, LogIn } from "lucide-react";
+import { Home, PlusCircle, LogOut, LogIn, LayoutDashboard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +33,12 @@ const Navbar = () => {
           </Link>
           {user ? (
             <>
+              <Link to="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Tableau de bord
+                </Button>
+              </Link>
               <Link to="/publish">
                 <Button variant="hero" size="sm">
                   <PlusCircle className="w-4 h-4" />
