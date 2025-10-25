@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Sparkles } from "lucide-react";
-import { PaymentButton } from "@/components/PaymentButton";
+import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins } from "lucide-react";
+import { BuyPointsButton } from "@/components/BuyPointsButton";
 
 interface Profile {
   full_name: string | null;
   phone: string | null;
   user_type: string | null;
+}
+
+interface UserPoints {
+  points: number;
 }
 
 interface Property {
@@ -34,6 +38,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,6 +52,7 @@ const Dashboard = () => {
     if (user) {
       fetchProfile();
       fetchProperties();
+      fetchUserPoints();
     }
   }, [user]);
 
@@ -62,6 +68,21 @@ const Dashboard = () => {
       setProfile(data);
     } catch (error) {
       console.error("Error fetching profile:", error);
+    }
+  };
+
+  const fetchUserPoints = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("user_points")
+        .select("points")
+        .eq("user_id", user?.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUserPoints(data);
+    } catch (error) {
+      console.error("Error fetching user points:", error);
     }
   };
 
@@ -169,6 +190,24 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Points Card */}
+        <Card className="mb-8 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/20 p-3 rounded-full">
+                  <Coins className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mes Points</p>
+                  <p className="text-3xl font-bold text-primary">{userPoints?.points || 0}</p>
+                </div>
+              </div>
+              <BuyPointsButton onSuccess={fetchUserPoints} />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
@@ -272,21 +311,6 @@ const Dashboard = () => {
                         <Edit className="w-4 h-4" />
                         Modifier
                       </Button>
-                      <PaymentButton
-                        amount={5000}
-                        description={`Promouvoir: ${property.title}`}
-                        metadata={{
-                          property_id: property.id,
-                          action: "promote_listing"
-                        }}
-                        onSuccess={() => {
-                          toast({
-                            title: "Paiement réussi",
-                            description: "Votre annonce sera promue après validation du paiement",
-                          });
-                        }}
-                        className="w-full md:w-auto"
-                      />
                       <Button
                         variant="destructive"
                         size="sm"
