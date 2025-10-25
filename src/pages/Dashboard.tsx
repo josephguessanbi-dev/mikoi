@@ -267,7 +267,7 @@ const Dashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/listing/${property.id}`)}
+                        onClick={() => navigate(`/edit/${property.id}`)}
                       >
                         <Edit className="w-4 h-4" />
                         Modifier

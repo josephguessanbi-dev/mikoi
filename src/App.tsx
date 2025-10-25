@@ -10,6 +10,7 @@ import ListingDetail from "./pages/ListingDetail";
 import Publish from "./pages/Publish";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import EditProperty from "./pages/EditProperty";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/publish" element={<Publish />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/edit/:id" element={<EditProperty />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,0 +1,372 @@
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Upload, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+const EditProperty = () => {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { uploadFiles, uploading } = useFileUpload();
+  const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchingProperty, setFetchingProperty] = useState(true);
+  const [formData, setFormData] = useState({
+    title: "",
+    listingType: "location",
+    propertyType: "appartement",
+    city: "abidjan",
+    district: "",
+    price: "",
+    bedrooms: "",
+    surface: "",
+    description: "",
+    existingImages: [] as string[],
+  });
+
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Authentification requise",
+        description: "Vous devez être connecté pour modifier une annonce",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [user, navigate, toast]);
+
+  useEffect(() => {
+    if (user && id) {
+      fetchProperty();
+    }
+  }, [user, id]);
+
+  const fetchProperty = async () => {
+    try {
+      setFetchingProperty(true);
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", user?.id)
+        .single();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast({
+          title: "Erreur",
+          description: "Annonce non trouvée ou vous n'avez pas l'autorisation de la modifier",
+          variant: "destructive",
+        });
+        navigate("/dashboard");
+        return;
+      }
+
+      setFormData({
+        title: data.title || "",
+        listingType: data.listing_type || "location",
+        propertyType: data.property_type || "appartement",
+        city: data.city || "abidjan",
+        district: data.district || "",
+        price: data.price?.toString() || "",
+        bedrooms: data.bedrooms?.toString() || "",
+        surface: data.surface?.toString() || "",
+        description: data.description || "",
+        existingImages: data.images || [],
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+      navigate("/dashboard");
+    } finally {
+      setFetchingProperty(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!user || !id) return;
+
+    setLoading(true);
+    try {
+      let imageUrls: string[] = [...formData.existingImages];
+      
+      if (files.length > 0) {
+        const newUrls = await uploadFiles(files);
+        imageUrls = [...imageUrls, ...newUrls];
+      }
+
+      const { error } = await supabase
+        .from("properties")
+        .update({
+          title: formData.title,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          city: formData.city,
+          district: formData.district,
+          property_type: formData.propertyType,
+          listing_type: formData.listingType,
+          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+          surface: formData.surface ? parseFloat(formData.surface) : null,
+          images: imageUrls,
+        })
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Annonce modifiée",
+        description: "Votre annonce a été modifiée avec succès",
+      });
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user || fetchingProperty) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Modifier l'annonce</h1>
+          <p className="text-muted-foreground">
+            Modifiez les informations de votre bien
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Titre de l'annonce</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Ex: Bel appartement 3 pièces à Cocody"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="listing-type">Type d'annonce</Label>
+                  <Select
+                    value={formData.listingType}
+                    onValueChange={(value) => setFormData({ ...formData, listingType: value })}
+                  >
+                    <SelectTrigger id="listing-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="location">Location</SelectItem>
+                      <SelectItem value="vente">Vente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="property-type">Type de bien</Label>
+                  <Select
+                    value={formData.propertyType}
+                    onValueChange={(value) => setFormData({ ...formData, propertyType: value })}
+                  >
+                    <SelectTrigger id="property-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="appartement">Appartement</SelectItem>
+                      <SelectItem value="maison">Maison</SelectItem>
+                      <SelectItem value="villa">Villa</SelectItem>
+                      <SelectItem value="studio">Studio</SelectItem>
+                      <SelectItem value="terrain">Terrain</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Ville</Label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={(value) => setFormData({ ...formData, city: value })}
+                  >
+                    <SelectTrigger id="city">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="abidjan">Abidjan</SelectItem>
+                      <SelectItem value="bouake">Bouaké</SelectItem>
+                      <SelectItem value="yamoussoukro">Yamoussoukro</SelectItem>
+                      <SelectItem value="san-pedro">San Pedro</SelectItem>
+                      <SelectItem value="korhogo">Korhogo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="district">Quartier</Label>
+                  <Input
+                    id="district"
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    placeholder="Ex: Cocody, Deux Plateaux"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Prix (FCFA)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="Ex: 500000"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Nombre de chambres</Label>
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    value={formData.bedrooms}
+                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    placeholder="Ex: 3"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="surface">Surface (m²)</Label>
+                  <Input
+                    id="surface"
+                    type="number"
+                    value={formData.surface}
+                    onChange={(e) => setFormData({ ...formData, surface: e.target.value })}
+                    placeholder="Ex: 85"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Décrivez votre bien en détail..."
+                  rows={6}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <Label>Photos du bien</Label>
+                {formData.existingImages.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Photos actuelles: {formData.existingImages.length}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {formData.existingImages.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Photo ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ajoutez de nouvelles photos (les anciennes seront conservées)
+                  </p>
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="max-w-xs mx-auto"
+                  />
+                  {files.length > 0 && (
+                    <p className="mt-4 text-sm text-primary">
+                      {files.length} nouveau(x) fichier(s) sélectionné(s)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigate("/dashboard")}
+              disabled={loading || uploading}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="hero"
+              className="flex-1"
+              onClick={handleSubmit}
+              disabled={loading || uploading}
+            >
+              {loading || uploading ? "Chargement..." : "Enregistrer les modifications"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditProperty;
