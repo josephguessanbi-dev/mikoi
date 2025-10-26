@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, LogOut, LogIn, LayoutDashboard } from "lucide-react";
+import { Home, PlusCircle, LogOut, LogIn, LayoutDashboard, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -33,6 +35,14 @@ const Navbar = () => {
           </Link>
           {user ? (
             <>
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm">
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm">
                   <LayoutDashboard className="w-4 h-4" />
