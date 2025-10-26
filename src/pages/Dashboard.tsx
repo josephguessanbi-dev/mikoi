@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins } from "lucide-react";
+import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins, CheckCircle2 } from "lucide-react";
 import { BuyPointsButton } from "@/components/BuyPointsButton";
 
 interface Profile {
@@ -125,6 +125,33 @@ const Dashboard = () => {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer l'annonce",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleReserved = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "reserved" ? "active" : "reserved";
+    const statusLabel = newStatus === "reserved" ? "réservée" : "active";
+
+    try {
+      const { error } = await supabase
+        .from("properties")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Statut mis à jour",
+        description: `Annonce marquée comme ${statusLabel}`,
+      });
+
+      fetchProperties();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
         variant: "destructive",
       });
     }
@@ -281,8 +308,12 @@ const Dashboard = () => {
                     <div className="flex-1 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-lg">{property.title}</h3>
-                        <Badge variant={property.status === "active" ? "default" : "secondary"}>
-                          {property.status === "active" ? "Active" : "Inactive"}
+                        <Badge variant={
+                          property.status === "reserved" ? "secondary" : 
+                          property.status === "active" ? "default" : "outline"
+                        }>
+                          {property.status === "reserved" ? "Réservé" : 
+                           property.status === "active" ? "Active" : "Inactive"}
                         </Badge>
                       </div>
 
@@ -310,6 +341,14 @@ const Dashboard = () => {
                       >
                         <Edit className="w-4 h-4" />
                         Modifier
+                      </Button>
+                      <Button
+                        variant={property.status === "reserved" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleToggleReserved(property.id, property.status)}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        {property.status === "reserved" ? "Activer" : "Réserver"}
                       </Button>
                       <Button
                         variant="destructive"
