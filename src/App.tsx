@@ -10,7 +10,7 @@ import ListingDetail from "./pages/ListingDetail";
 import Publish from "./pages/Publish";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import Admin from "./pages/Admin";
 import EditProperty from "./pages/EditProperty";
 import NotFound from "./pages/NotFound";
 
@@ -30,7 +30,7 @@ const App = () => (
             <Route path="/publish" element={<Publish />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/edit/:id" element={<EditProperty />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
