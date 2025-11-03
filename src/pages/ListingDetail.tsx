@@ -20,11 +20,18 @@ interface Property {
   bedrooms: number | null;
   surface: number | null;
   images: string[];
+  user_id: string;
+}
+
+interface OwnerProfile {
+  phone: string | null;
+  full_name: string | null;
 }
 
 const ListingDetail = () => {
   const { id } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
+  const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -42,6 +49,19 @@ const ListingDetail = () => {
 
       if (error) throw error;
       setProperty(data);
+
+      // Fetch owner profile
+      if (data?.user_id) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("phone, full_name")
+          .eq("user_id", data.user_id)
+          .single();
+
+        if (!profileError && profileData) {
+          setOwnerProfile(profileData);
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -50,6 +70,33 @@ const ListingDetail = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCall = () => {
+    if (ownerProfile?.phone) {
+      window.location.href = `tel:${ownerProfile.phone}`;
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Numéro de téléphone non disponible",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMessage = () => {
+    if (ownerProfile?.phone) {
+      const message = encodeURIComponent(`Bonjour, je suis intéressé(e) par votre annonce "${property?.title}"`);
+      // Remove spaces and format for WhatsApp
+      const phoneNumber = ownerProfile.phone.replace(/\s/g, '');
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Numéro de téléphone non disponible",
+        variant: "destructive",
+      });
     }
   };
 
@@ -167,15 +214,32 @@ const ListingDetail = () => {
                   </div>
                   
                   <div className="space-y-3">
-                    <Button className="w-full" size="lg" variant="hero">
+                    <Button 
+                      className="w-full" 
+                      size="lg" 
+                      variant="default"
+                      onClick={handleCall}
+                      disabled={!ownerProfile?.phone}
+                    >
                       <Phone className="w-4 h-4 mr-2" />
                       Appeler
                     </Button>
-                    <Button className="w-full" size="lg" variant="outline">
+                    <Button 
+                      className="w-full" 
+                      size="lg" 
+                      variant="outline"
+                      onClick={handleMessage}
+                      disabled={!ownerProfile?.phone}
+                    >
                       <MessageSquare className="w-4 h-4 mr-2" />
-                      Message
+                      Message WhatsApp
                     </Button>
                   </div>
+                  {ownerProfile?.phone && (
+                    <p className="text-sm text-muted-foreground text-center mt-4">
+                      Contact: {ownerProfile.phone}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
