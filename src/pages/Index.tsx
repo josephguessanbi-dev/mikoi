@@ -1,14 +1,17 @@
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import { ArrowRight, Shield, MapPin, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { mockProperties } from "@/data/mockProperties";
 import heroImage from "@/assets/hero-image.jpg";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const featuredProperties = mockProperties.slice(0, 3);
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
@@ -30,25 +33,23 @@ const Index = () => {
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-              Trouvez votre
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> maison idéale </span>
-              en Côte d'Ivoire
+              {t("home.hero.title")}
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              La plateforme n°1 pour louer, acheter ou vendre votre bien immobilier en toute confiance
+              {t("home.hero.subtitle")}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button variant="hero" size="lg" asChild>
+              <Button variant="default" size="lg" asChild>
                 <Link to="/listings">
-                  Explorer les annonces
+                  {t("home.hero.cta")}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link to="/publish">
-                  Publier une annonce
+                  {t("home.hero.publish")}
                 </Link>
               </Button>
             </div>
@@ -65,9 +66,9 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: "5000+", label: "Annonces actives" },
-              { value: "15+", label: "Villes couvertes" },
-              { value: "3000+", label: "Clients satisfaits" },
+              { value: "5000+", label: t("home.stats.listings") },
+              { value: "15+", label: t("home.stats.cities") },
+              { value: "3000+", label: t("home.stats.clients") },
               { value: "100%", label: "Sécurisé" },
             ].map((stat, index) => (
               <div key={index} className="text-center space-y-2">
@@ -83,7 +84,7 @@ const Index = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold">Annonces à la une</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">{t("home.featured.title")}</h2>
             <p className="text-muted-foreground text-lg">
               Découvrez notre sélection des meilleures offres du moment
             </p>
@@ -120,18 +121,18 @@ const Index = () => {
             {[
               {
                 icon: Shield,
-                title: "Sécurisé et vérifié",
-                description: "Toutes les annonces sont vérifiées par notre équipe pour garantir votre sécurité",
+                title: t("home.features.secure"),
+                description: t("home.features.secure.desc"),
               },
               {
                 icon: MapPin,
-                title: "Partout en Côte d'Ivoire",
-                description: "Des milliers d'annonces dans toutes les grandes villes du pays",
+                title: t("home.features.coverage"),
+                description: t("home.features.coverage.desc"),
               },
               {
                 icon: TrendingUp,
-                title: "Prix transparents",
-                description: "Des prix justes et transparents sans frais cachés",
+                title: t("home.features.transparent"),
+                description: t("home.features.transparent.desc"),
               },
             ].map((feature, index) => (
               <div
@@ -152,17 +153,17 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-12 text-center text-white shadow-glow">
+          <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-12 text-center text-white shadow-glow">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Prêt à trouver votre futur logement ?
+              {t("home.cta.title")}
             </h2>
             <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              Rejoignez des milliers d'Ivoiriens qui ont trouvé leur maison idéale sur MikoiCI
+              {t("home.cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button variant="outline" size="lg" className="bg-white text-primary hover:bg-white/90" asChild>
                 <Link to="/listings">
-                  Commencer maintenant
+                  {t("home.cta.button")}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
@@ -171,14 +172,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-muted-foreground">
-            <p>&copy; 2025 MikoiCI. Tous droits réservés.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
