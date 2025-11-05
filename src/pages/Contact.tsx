@@ -98,14 +98,14 @@ const Contact = () => {
                     <Mail className="h-5 w-5 text-primary mt-1" />
                     <div>
                       <p className="font-semibold">{t("contact.info.email")}</p>
-                      <p className="text-muted-foreground">contact@mikoici.ci</p>
+                      <p className="text-muted-foreground">chadonn1111@gmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Phone className="h-5 w-5 text-primary mt-1" />
                     <div>
                       <p className="font-semibold">{t("contact.info.phone")}</p>
-                      <p className="text-muted-foreground">+225 07 00 00 00</p>
+                      <p className="text-muted-foreground">0705933566</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
