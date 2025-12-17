@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Home } from "lucide-react";
+import { Home, Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +18,8 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [userType, setUserType] = useState<string>("chercheur");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -32,7 +34,19 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth`,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Email envoyé",
+          description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe",
+        });
+        setIsForgotPassword(false);
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -97,17 +111,19 @@ const Auth = () => {
             <Home className="w-10 h-10 text-primary" />
           </div>
           <CardTitle className="text-2xl text-center">
-            {isLogin ? "Connexion" : "Inscription"}
+            {isForgotPassword ? "Mot de passe oublié" : isLogin ? "Connexion" : "Inscription"}
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin
-              ? "Connectez-vous à votre compte MikoiCI"
-              : "Créez votre compte MikoiCI"}
+            {isForgotPassword
+              ? "Entrez votre email pour réinitialiser votre mot de passe"
+              : isLogin
+                ? "Connectez-vous à votre compte MikoiCI"
+                : "Créez votre compte MikoiCI"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
+            {!isLogin && !isForgotPassword && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Nom complet</Label>
@@ -154,31 +170,70 @@ const Auth = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
+            {!isForgotPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            {isLogin && !isForgotPassword && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPassword(true)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Mot de passe oublié ?
+                </button>
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Chargement..." : isLogin ? "Se connecter" : "S'inscrire"}
+              {loading
+                ? "Chargement..."
+                : isForgotPassword
+                  ? "Envoyer le lien"
+                  : isLogin
+                    ? "Se connecter"
+                    : "S'inscrire"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
-            >
-              {isLogin
-                ? "Pas de compte ? S'inscrire"
-                : "Déjà un compte ? Se connecter"}
-            </button>
+            {isForgotPassword ? (
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(false)}
+                className="text-primary hover:underline"
+              >
+                Retour à la connexion
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-primary hover:underline"
+              >
+                {isLogin
+                  ? "Pas de compte ? S'inscrire"
+                  : "Déjà un compte ? Se connecter"}
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
