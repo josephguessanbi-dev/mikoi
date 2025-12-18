@@ -19,9 +19,9 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/95 to-background/80 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/60 to-background/40 z-10" />
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-cover bg-center opacity-60"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
         
