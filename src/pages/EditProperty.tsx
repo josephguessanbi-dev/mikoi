@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,6 +164,15 @@ const EditProperty = () => {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 max-w-3xl">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </Button>
+        
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Modifier l'annonce</h1>
           <p className="text-muted-foreground">

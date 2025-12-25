@@ -1,17 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Contact = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -40,6 +42,15 @@ const Contact = () => {
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 mb-6"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+          
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">{t("contact.title")}</h1>
             <p className="text-xl text-muted-foreground">{t("contact.subtitle")}</p>

@@ -1,10 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Legal = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -12,6 +16,15 @@ const Legal = () => {
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 mb-6"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+          
           <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center">{t("legal.title")}</h1>
 
           <Tabs defaultValue="mentions" className="w-full">
