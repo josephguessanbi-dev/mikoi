@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins, CheckCircle2 } from "lucide-react";
+import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins, CheckCircle2, ArrowLeft } from "lucide-react";
 import { BuyPointsButton } from "@/components/BuyPointsButton";
 
 interface Profile {
@@ -170,6 +170,15 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </Button>
+        
         <h1 className="text-3xl md:text-4xl font-bold mb-8">Mon Tableau de Bord</h1>
 
         {/* Profile Card */}

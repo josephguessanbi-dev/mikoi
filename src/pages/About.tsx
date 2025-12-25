@@ -1,10 +1,13 @@
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, TrendingUp, Users, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, TrendingUp, Users, Award, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const About = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -12,6 +15,15 @@ const About = () => {
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 mb-6"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+          
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">{t("about.title")}</h1>
             <p className="text-xl text-muted-foreground">{t("about.subtitle")}</p>

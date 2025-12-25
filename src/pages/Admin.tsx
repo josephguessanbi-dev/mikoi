@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Home, Coins, TrendingUp } from "lucide-react";
+import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -218,6 +218,15 @@ const Admin = () => {
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </Button>
+        
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl md:text-4xl font-bold">Tableau de Bord Admin</h1>
           <Badge variant="default" className="text-lg px-4 py-2">
