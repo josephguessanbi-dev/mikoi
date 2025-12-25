@@ -23,13 +23,21 @@ interface Property {
   listing_type: string;
 }
 
+interface Stats {
+  totalListings: number;
+  totalCities: number;
+  totalUsers: number;
+}
+
 const Index = () => {
   const [properties, setProperties] = useState<Property[]>([]);
+  const [stats, setStats] = useState<Stats>({ totalListings: 0, totalCities: 0, totalUsers: 0 });
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
   useEffect(() => {
     fetchProperties();
+    fetchStats();
   }, []);
 
   const fetchProperties = async () => {
@@ -47,6 +55,37 @@ const Index = () => {
       console.error("Erreur lors du chargement des annonces:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      // Fetch total listings count
+      const { count: listingsCount } = await supabase
+        .from("properties")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+
+      // Fetch unique cities
+      const { data: citiesData } = await supabase
+        .from("properties")
+        .select("city")
+        .eq("status", "active");
+      
+      const uniqueCities = new Set(citiesData?.map(p => p.city) || []);
+
+      // Fetch total users count
+      const { count: usersCount } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
+
+      setStats({
+        totalListings: listingsCount || 0,
+        totalCities: uniqueCities.size,
+        totalUsers: usersCount || 0,
+      });
+    } catch (error) {
+      console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
@@ -103,9 +142,9 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: "5000+", label: t("home.stats.listings") },
-              { value: "15+", label: t("home.stats.cities") },
-              { value: "3000+", label: t("home.stats.clients") },
+              { value: stats.totalListings, label: t("home.stats.listings") },
+              { value: stats.totalCities, label: t("home.stats.cities") },
+              { value: stats.totalUsers, label: t("home.stats.clients") },
               { value: "100%", label: "Sécurisé" },
             ].map((stat, index) => (
               <div key={index} className="text-center space-y-2">
