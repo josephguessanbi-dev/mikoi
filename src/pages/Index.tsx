@@ -1,17 +1,54 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
-import { ArrowRight, Shield, MapPin, TrendingUp } from "lucide-react";
+import { ArrowRight, Shield, MapPin, TrendingUp, Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import { mockProperties } from "@/data/mockProperties";
 import heroImage from "@/assets/hero-image.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Property {
+  id: string;
+  title: string;
+  price: number;
+  city: string;
+  district: string | null;
+  bedrooms: number | null;
+  surface: number | null;
+  images: string[];
+  property_type: string;
+  listing_type: string;
+}
 
 const Index = () => {
-  const featuredProperties = mockProperties.slice(0, 3);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      setProperties(data || []);
+    } catch (error) {
+      console.error("Erreur lors du chargement des annonces:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
@@ -90,20 +127,52 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {featuredProperties.map((property) => (
-              <PropertyCard key={property.id} {...property} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Chargement des annonces...</p>
+            </div>
+          ) : properties.length === 0 ? (
+            <div className="text-center py-16 bg-muted/30 rounded-xl border border-border">
+              <Home className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Aucune annonce disponible</h3>
+              <p className="text-muted-foreground mb-6">
+                Soyez le premier à publier une annonce sur notre plateforme !
+              </p>
+              <Button asChild>
+                <Link to="/publish">
+                  Publier une annonce
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {properties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    id={property.id}
+                    title={property.title}
+                    price={property.price.toString()}
+                    location={`${property.city}${property.district ? ", " + property.district : ""}`}
+                    bedrooms={property.bedrooms || 0}
+                    surface={property.surface || 0}
+                    image={property.images?.[0] || "/placeholder.svg"}
+                    type={property.listing_type as "location" | "vente"}
+                  />
+                ))}
+              </div>
 
-          <div className="text-center">
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/listings">
-                Voir toutes les annonces
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </Button>
-          </div>
+              <div className="text-center">
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/listings">
+                    Voir toutes les annonces
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
