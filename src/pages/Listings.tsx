@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import PropertyCard from "@/components/PropertyCard";
 import SearchBar from "@/components/SearchBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Home, FileText, Phone, Info } from "lucide-react";
 
 interface Property {
   id: string;
@@ -19,6 +22,7 @@ interface Property {
 }
 
 const Listings = () => {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -70,6 +74,50 @@ const Listings = () => {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Navigation Buttons */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Accueil
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/publish")}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Publier
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/about")}
+            className="flex items-center gap-2"
+          >
+            <Info className="h-4 w-4" />
+            À propos
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/contact")}
+            className="flex items-center gap-2"
+          >
+            <Phone className="h-4 w-4" />
+            Contact
+          </Button>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Toutes les annonces</h1>
           <p className="text-muted-foreground text-lg">
