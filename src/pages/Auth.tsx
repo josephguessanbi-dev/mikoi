@@ -84,11 +84,20 @@ const Auth = () => {
             phone,
             user_type: userType,
           });
+
+          // Send welcome email to new user
+          try {
+            await supabase.functions.invoke("send-welcome-email", {
+              body: { email, fullName },
+            });
+          } catch (emailError) {
+            console.error("Failed to send welcome email:", emailError);
+          }
         }
 
         toast({
           title: "Inscription réussie",
-          description: "Vous pouvez maintenant vous connecter",
+          description: "Vous pouvez maintenant vous connecter. Un email de bienvenue vous a été envoyé !",
         });
         setIsLogin(true);
       }
