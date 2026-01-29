@@ -50,16 +50,13 @@ const ListingDetail = () => {
       if (error) throw error;
       setProperty(data);
 
-      // Fetch owner profile
-      if (data?.user_id) {
+      // Fetch owner profile using secure RPC function
+      if (data?.id) {
         const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("phone, full_name")
-          .eq("user_id", data.user_id)
-          .single();
+          .rpc("get_property_owner_contact", { property_id: data.id });
 
-        if (!profileError && profileData) {
-          setOwnerProfile(profileData);
+        if (!profileError && profileData && profileData.length > 0) {
+          setOwnerProfile(profileData[0]);
         }
       }
     } catch (error: any) {
