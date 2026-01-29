@@ -5,6 +5,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validate payment reference format
+function isValidReference(reference: string): boolean {
+  if (!reference || typeof reference !== 'string') return false;
+  if (reference.length < 10 || reference.length > 100) return false;
+  return /^[a-zA-Z0-9_-]+$/.test(reference);
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,9 +21,10 @@ serve(async (req) => {
   try {
     const { reference } = await req.json();
     
-    if (!reference) {
+    // Validate reference format
+    if (!isValidReference(reference)) {
       return new Response(
-        JSON.stringify({ error: 'Référence de paiement requise' }),
+        JSON.stringify({ error: 'Référence de paiement invalide' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -26,7 +34,7 @@ serve(async (req) => {
     if (!PAYSTACK_SECRET_KEY) {
       console.error('PAYSTACK_SECRET_KEY non configuré');
       return new Response(
-        JSON.stringify({ error: 'Configuration de paiement manquante' }),
+        JSON.stringify({ error: 'Configuration de paiement indisponible' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -34,7 +42,7 @@ serve(async (req) => {
     console.log('Vérification du paiement:', reference);
 
     // Vérifier la transaction avec l'API Paystack
-    const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+    const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
@@ -44,11 +52,11 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error('Erreur Paystack:', data);
+    if (!response.ok || !data.status) {
+      console.error('Erreur Paystack:', data.message);
       return new Response(
-        JSON.stringify({ error: data.message || 'Erreur lors de la vérification du paiement' }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Vérification du paiement échouée' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -67,9 +75,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Erreur dans verify-payment:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Une erreur est survenue lors de la vérification' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

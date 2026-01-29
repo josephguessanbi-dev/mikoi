@@ -6,6 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Validate payment reference format (Paystack references are alphanumeric)
+function isValidReference(reference: string): boolean {
+  if (!reference || typeof reference !== 'string') return false;
+  if (reference.length < 10 || reference.length > 100) return false;
+  // Paystack references contain alphanumeric characters
+  return /^[a-zA-Z0-9_-]+$/.test(reference);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,19 +22,63 @@ serve(async (req) => {
   try {
     const { reference } = await req.json();
 
-    if (!reference) {
-      throw new Error("Référence de paiement manquante");
+    // Validate reference format
+    if (!isValidReference(reference)) {
+      console.log("Invalid reference format:", reference);
+      return new Response(
+        JSON.stringify({ error: "Référence de paiement invalide" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
     }
 
     console.log(`Vérification du paiement: ${reference}`);
 
+    // Initialize Supabase with service role
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // CRITICAL: Check if this reference has already been processed
+    const { data: existingTransaction } = await supabaseAdmin
+      .from("points_transactions")
+      .select("id")
+      .eq("payment_reference", reference)
+      .maybeSingle();
+
+    if (existingTransaction) {
+      console.log(`Duplicate payment reference detected: ${reference}`);
+      return new Response(
+        JSON.stringify({ error: "Ce paiement a déjà été traité" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
+    if (!PAYSTACK_SECRET_KEY) {
+      console.error("PAYSTACK_SECRET_KEY non configuré");
+      return new Response(
+        JSON.stringify({ error: "Configuration de paiement indisponible" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+
     // Verify payment with Paystack
     const paystackResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
+      `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${Deno.env.get("PAYSTACK_SECRET_KEY")}`,
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
         },
       }
     );
@@ -34,20 +86,58 @@ serve(async (req) => {
     const paystackData = await paystackResponse.json();
 
     if (!paystackData.status || paystackData.data.status !== "success") {
-      throw new Error("Paiement non vérifié");
+      console.log("Payment not verified:", paystackData.data?.status);
+      return new Response(
+        JSON.stringify({ error: "Paiement non vérifié" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
     }
 
     const metadata = paystackData.data.metadata;
-    const points = metadata.points;
-    const userId = metadata.user_id;
+    
+    // Validate metadata
+    if (!metadata || !metadata.points || !metadata.user_id) {
+      console.error("Invalid metadata in payment:", metadata);
+      return new Response(
+        JSON.stringify({ error: "Données de paiement invalides" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    const points = Number(metadata.points);
+    const userId = String(metadata.user_id);
+
+    // Validate points value
+    if (isNaN(points) || points <= 0 || points > 1000) {
+      console.error("Invalid points value:", points);
+      return new Response(
+        JSON.stringify({ error: "Valeur de points invalide" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    // Validate user_id format (UUID)
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      console.error("Invalid user_id format:", userId);
+      return new Response(
+        JSON.stringify({ error: "Identifiant utilisateur invalide" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
 
     console.log(`Paiement vérifié pour l'utilisateur ${userId}: ${points} points`);
-
-    // Initialize Supabase with service role
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     // Add points to user account
     const { data: currentPoints, error: fetchError } = await supabaseAdmin
@@ -58,7 +148,13 @@ serve(async (req) => {
 
     if (fetchError) {
       console.error("Erreur lors de la récupération des points:", fetchError);
-      throw fetchError;
+      return new Response(
+        JSON.stringify({ error: "Erreur lors du traitement" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
     }
 
     const newPoints = (currentPoints?.points || 0) + points;
@@ -70,7 +166,13 @@ serve(async (req) => {
 
     if (updateError) {
       console.error("Erreur lors de la mise à jour des points:", updateError);
-      throw updateError;
+      return new Response(
+        JSON.stringify({ error: "Erreur lors de la mise à jour" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
     }
 
     // Record transaction
@@ -86,6 +188,7 @@ serve(async (req) => {
 
     if (transactionError) {
       console.error("Erreur lors de l'enregistrement de la transaction:", transactionError);
+      // Don't fail the request - points were already added
     }
 
     console.log(`Points ajoutés avec succès: ${newPoints} points au total`);
@@ -104,10 +207,10 @@ serve(async (req) => {
   } catch (error) {
     console.error("Erreur:", error);
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: "Une erreur est survenue lors de la vérification" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status: 500,
       }
     );
   }

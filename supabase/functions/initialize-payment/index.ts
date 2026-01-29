@@ -5,6 +5,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple email validation
+function isValidEmail(email: string): boolean {
+  if (!email || typeof email !== 'string') return false;
+  if (email.length > 255) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Simple in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(email: string): boolean {
+  const now = Date.now();
+  const userLimit = rateLimitMap.get(email);
+  
+  if (!userLimit || now > userLimit.resetAt) {
+    rateLimitMap.set(email, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (userLimit.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  userLimit.count++;
+  return true;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,10 +43,28 @@ serve(async (req) => {
   try {
     const { email, amount, metadata } = await req.json();
     
-    if (!email || !amount) {
+    // Validate email
+    if (!isValidEmail(email)) {
       return new Response(
-        JSON.stringify({ error: 'Email et montant requis' }),
+        JSON.stringify({ error: 'Email invalide' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate amount
+    if (!amount || typeof amount !== 'number' || amount <= 0 || amount > 10000000) {
+      return new Response(
+        JSON.stringify({ error: 'Montant invalide' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Rate limiting check
+    if (!checkRateLimit(email)) {
+      console.log(`Rate limit exceeded for: ${email}`);
+      return new Response(
+        JSON.stringify({ error: 'Trop de tentatives. Veuillez réessayer plus tard.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -26,7 +73,7 @@ serve(async (req) => {
     if (!PAYSTACK_SECRET_KEY) {
       console.error('PAYSTACK_SECRET_KEY non configuré');
       return new Response(
-        JSON.stringify({ error: 'Configuration de paiement manquante' }),
+        JSON.stringify({ error: 'Configuration de paiement indisponible' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -51,11 +98,11 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error('Erreur Paystack:', data);
+    if (!response.ok || !data.status) {
+      console.error('Erreur Paystack:', data.message);
       return new Response(
-        JSON.stringify({ error: data.message || 'Erreur lors de l\'initialisation du paiement' }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Impossible d\'initialiser le paiement' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -72,9 +119,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Erreur dans initialize-payment:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Une erreur est survenue lors de l\'initialisation' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
