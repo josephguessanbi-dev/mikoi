@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft } from "lucide-react";
+import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminStats {
   totalUsers: number;
@@ -27,7 +28,6 @@ interface AdminStats {
 
 interface User {
   id: string;
-  email: string;
   full_name: string | null;
   phone: string | null;
   user_type: string | null;
@@ -43,28 +43,33 @@ interface Property {
   status: string;
   listing_type: string;
   property_type: string;
-  owner_email: string;
+  owner_name: string;
   created_at: string;
 }
 
 interface Transaction {
   id: string;
-  user_email: string;
+  user_name: string;
   amount: number;
   transaction_type: string;
   description: string | null;
   created_at: string;
 }
 
+interface AdminData {
+  stats: AdminStats;
+  users: User[];
+  properties: Property[];
+  transactions: Transaction[];
+}
+
 const Admin = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<AdminData | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -73,144 +78,78 @@ const Admin = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) {
-      checkAdminRole();
+    if (session) {
+      fetchAdminData();
     }
-  }, [user]);
+  }, [session]);
 
-  const checkAdminRole = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user?.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!data) {
-        navigate("/");
-        return;
-      }
-
-      setIsAdmin(true);
-      fetchAllData();
-    } catch (error) {
-      console.error("Error checking admin role:", error);
-      navigate("/");
-    }
-  };
-
-  const fetchAllData = async () => {
+  const fetchAdminData = async () => {
     try {
       setLoading(true);
-      await Promise.all([
-        fetchStats(),
-        fetchUsers(),
-        fetchProperties(),
-        fetchTransactions(),
-      ]);
-    } catch (error) {
-      console.error("Error fetching admin data:", error);
+      setError(null);
+
+      const response = await supabase.functions.invoke('admin-dashboard', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to fetch admin data');
+      }
+
+      const result = response.data;
+
+      if (result.error) {
+        if (result.error === 'Unauthorized: Admin access required') {
+          navigate("/");
+          return;
+        }
+        throw new Error(result.error);
+      }
+
+      setData(result);
+    } catch (err: any) {
+      console.error("Error fetching admin data:", err);
+      setError(err.message || "Une erreur s'est produite");
+      toast({
+        title: "Erreur",
+        description: err.message || "Impossible de charger les données admin",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    const { data: profiles } = await supabase.from("profiles").select("*");
-    const { data: properties } = await supabase.from("properties").select("status");
-    const { data: points } = await supabase.from("user_points").select("points");
-
-    setStats({
-      totalUsers: profiles?.length || 0,
-      totalProperties: properties?.length || 0,
-      activeProperties: properties?.filter((p) => p.status === "active").length || 0,
-      reservedProperties: properties?.filter((p) => p.status === "reserved").length || 0,
-      totalPoints: points?.reduce((sum, p) => sum + p.points, 0) || 0,
-    });
-  };
-
-  const fetchUsers = async () => {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    const { data: points } = await supabase.from("user_points").select("*");
-
-    const usersWithPoints = profiles?.map((profile) => {
-      const userPoints = points?.find((p) => p.user_id === profile.user_id);
-      return {
-        id: profile.user_id,
-        email: profile.user_id, // We'll need to get actual email separately
-        full_name: profile.full_name,
-        phone: profile.phone,
-        user_type: profile.user_type,
-        points: userPoints?.points || 0,
-        created_at: profile.created_at,
-      };
-    });
-
-    setUsers(usersWithPoints || []);
-  };
-
-  const fetchProperties = async () => {
-    const { data } = await supabase
-      .from("properties")
-      .select(`
-        id,
-        title,
-        price,
-        city,
-        status,
-        listing_type,
-        property_type,
-        user_id,
-        created_at
-      `)
-      .order("created_at", { ascending: false });
-
-    const { data: profiles } = await supabase.from("profiles").select("user_id, full_name");
-
-    const propertiesWithOwner = data?.map((property) => {
-      const owner = profiles?.find((p) => p.user_id === property.user_id);
-      return {
-        ...property,
-        owner_email: owner?.full_name || "Inconnu",
-      };
-    });
-
-    setProperties(propertiesWithOwner || []);
-  };
-
-  const fetchTransactions = async () => {
-    const { data } = await supabase
-      .from("points_transactions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    const { data: profiles } = await supabase.from("profiles").select("user_id, full_name");
-
-    const transactionsWithUser = data?.map((transaction) => {
-      const user = profiles?.find((p) => p.user_id === transaction.user_id);
-      return {
-        ...transaction,
-        user_email: user?.full_name || "Inconnu",
-      };
-    });
-
-    setTransactions(transactionsWithUser || []);
-  };
-
-  if (authLoading || loading || !isAdmin) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="pt-6 text-center">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
+              <h2 className="text-xl font-bold mb-2">Accès refusé</h2>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => navigate("/")}>Retour à l'accueil</Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
   }
 
   return (
@@ -244,7 +183,7 @@ const Admin = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Utilisateurs</p>
-                  <p className="text-2xl font-bold">{stats?.totalUsers}</p>
+                  <p className="text-2xl font-bold">{data.stats.totalUsers}</p>
                 </div>
               </div>
             </CardContent>
@@ -258,7 +197,7 @@ const Admin = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Annonces</p>
-                  <p className="text-2xl font-bold">{stats?.totalProperties}</p>
+                  <p className="text-2xl font-bold">{data.stats.totalProperties}</p>
                 </div>
               </div>
             </CardContent>
@@ -272,7 +211,7 @@ const Admin = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Actives</p>
-                  <p className="text-2xl font-bold">{stats?.activeProperties}</p>
+                  <p className="text-2xl font-bold">{data.stats.activeProperties}</p>
                 </div>
               </div>
             </CardContent>
@@ -286,7 +225,7 @@ const Admin = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Réservées</p>
-                  <p className="text-2xl font-bold">{stats?.reservedProperties}</p>
+                  <p className="text-2xl font-bold">{data.stats.reservedProperties}</p>
                 </div>
               </div>
             </CardContent>
@@ -300,7 +239,7 @@ const Admin = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Points Total</p>
-                  <p className="text-2xl font-bold">{stats?.totalPoints}</p>
+                  <p className="text-2xl font-bold">{data.stats.totalPoints}</p>
                 </div>
               </div>
             </CardContent>
@@ -332,7 +271,7 @@ const Admin = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
+                    {data.users.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           {user.full_name || "Non renseigné"}
@@ -372,10 +311,10 @@ const Admin = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {properties.map((property) => (
+                    {data.properties.map((property) => (
                       <TableRow key={property.id}>
                         <TableCell className="font-medium">{property.title}</TableCell>
-                        <TableCell>{property.owner_email}</TableCell>
+                        <TableCell>{property.owner_name}</TableCell>
                         <TableCell>{property.city}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{property.property_type}</Badge>
@@ -426,10 +365,10 @@ const Admin = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map((transaction) => (
+                    {data.transactions.map((transaction) => (
                       <TableRow key={transaction.id}>
                         <TableCell className="font-medium">
-                          {transaction.user_email}
+                          {transaction.user_name}
                         </TableCell>
                         <TableCell>
                           <Badge
