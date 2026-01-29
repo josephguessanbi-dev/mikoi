@@ -38,13 +38,12 @@ export const PaymentButton = ({
 
     try {
       // Initialiser le paiement via notre edge function
+      // Note: email and user_id are now extracted from the auth token server-side
       const { data, error } = await supabase.functions.invoke('initialize-payment', {
         body: {
-          email: user.email,
           amount: amount,
           metadata: {
             ...metadata,
-            user_id: user.id,
             description: description,
           },
         },
