@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins, CheckCircle2, ArrowLeft } from "lucide-react";
 import { BuyPointsButton } from "@/components/BuyPointsButton";
+import { DashboardQuickActions } from "@/components/DashboardQuickActions";
 
 interface Profile {
   full_name: string | null;
@@ -179,7 +180,33 @@ const Dashboard = () => {
           Retour
         </Button>
         
-        <h1 className="text-3xl md:text-4xl font-bold mb-8">Mon Tableau de Bord</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold">Mon Tableau de Bord</h1>
+            <p className="text-muted-foreground mt-1">
+              Bienvenue, {profile?.full_name || "Utilisateur"} !
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div id="points" className="flex items-center gap-2 bg-gradient-to-r from-primary/20 to-primary/10 px-4 py-2 rounded-full">
+              <Coins className="w-5 h-5 text-primary" />
+              <span className="font-bold text-primary">{userPoints?.points || 0} points</span>
+            </div>
+            <BuyPointsButton onSuccess={fetchUserPoints} className="rounded-full" />
+          </div>
+        </div>
+
+        {/* Quick Actions Grid */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">Actions Rapides</h2>
+          <DashboardQuickActions
+            totalProperties={properties.length}
+            activeProperties={properties.filter((p) => p.status === "active").length}
+            forSale={properties.filter((p) => p.listing_type === "vente").length}
+            forRent={properties.filter((p) => p.listing_type === "location").length}
+            points={userPoints?.points || 0}
+          />
+        </section>
 
         {/* Profile Card */}
         <Card className="mb-8">
@@ -226,59 +253,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Points Card */}
-        <Card className="mb-8 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="bg-primary/20 p-3 rounded-full">
-                  <Coins className="w-8 h-8 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Mes Points</p>
-                  <p className="text-3xl font-bold text-primary">{userPoints?.points || 0}</p>
-                </div>
-              </div>
-              <BuyPointsButton onSuccess={fetchUserPoints} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary">{properties.length}</p>
-                <p className="text-sm text-muted-foreground">Annonces totales</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary">
-                  {properties.filter((p) => p.status === "active").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Annonces actives</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary">
-                  {properties.filter((p) => p.listing_type === "vente").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Biens à vendre</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Properties List */}
+        <div id="my-properties">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -374,6 +350,7 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
