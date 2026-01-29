@@ -152,10 +152,10 @@ const ListingDetail = () => {
               />
               <div className="absolute top-4 left-4 flex gap-2">
                 <Badge className="bg-primary/90 backdrop-blur-sm">
-                  {property.property_type}
+                  {property.listing_type === "location" ? "À louer" : "À vendre"}
                 </Badge>
                 <Badge variant="secondary" className="bg-secondary/90 backdrop-blur-sm">
-                  {property.listing_type}
+                  {property.property_type}
                 </Badge>
               </div>
               <div className="absolute top-4 right-4 flex gap-2">
