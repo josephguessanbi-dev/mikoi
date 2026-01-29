@@ -78,17 +78,24 @@ const Auth = () => {
         if (error) throw error;
 
         if (data.user) {
-          await supabase.from("profiles").insert({
-            user_id: data.user.id,
-            full_name: fullName,
-            phone,
-            user_type: userType,
+          // Use server-side validation for profile creation
+          const { error: registerError } = await supabase.functions.invoke("register-user", {
+            body: { 
+              full_name: fullName,
+              phone,
+              user_type: userType,
+            },
           });
+
+          if (registerError) {
+            console.error("Profile creation error:", registerError);
+            // Don't throw - user is already created, just log the error
+          }
 
           // Send welcome email to new user
           try {
             await supabase.functions.invoke("send-welcome-email", {
-              body: { email, fullName },
+              body: { fullName },
             });
           } catch (emailError) {
             console.error("Failed to send welcome email:", emailError);

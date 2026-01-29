@@ -178,6 +178,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_property_owner_contact: {
+        Args: { property_id: string }
+        Returns: {
+          full_name: string
+          phone: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
