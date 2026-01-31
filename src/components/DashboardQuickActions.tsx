@@ -8,7 +8,10 @@ import {
   MapPin, 
   Key, 
   Building2,
-  TrendingUp
+  TrendingUp,
+  Heart,
+  Crown,
+  Star
 } from "lucide-react";
 
 interface QuickAction {
@@ -28,6 +31,7 @@ interface DashboardQuickActionsProps {
   forSale: number;
   forRent: number;
   points: number;
+  favoritesCount?: number;
 }
 
 export const DashboardQuickActions = ({
@@ -36,6 +40,7 @@ export const DashboardQuickActions = ({
   forSale,
   forRent,
   points,
+  favoritesCount = 0,
 }: DashboardQuickActionsProps) => {
   const navigate = useNavigate();
 
@@ -107,10 +112,28 @@ export const DashboardQuickActions = ({
       iconColor: "text-pink-600",
     },
     {
-      title: "Rechercher par Ville",
-      description: "Trouvez des biens par localisation",
-      icon: MapPin,
-      href: "/listings",
+      title: "Mes Favoris",
+      description: "Annonces sauvegardées",
+      icon: Heart,
+      href: "#favorites",
+      count: favoritesCount,
+      countLabel: favoritesCount === 1 ? "favori" : "favoris",
+      gradient: "from-red-500/20 to-rose-500/10",
+      iconColor: "text-red-600",
+    },
+    {
+      title: "Abonnement Premium",
+      description: "Boostez votre visibilité",
+      icon: Crown,
+      href: "/pricing",
+      gradient: "from-amber-500/20 to-yellow-500/10",
+      iconColor: "text-amber-600",
+    },
+    {
+      title: "Mes Avis",
+      description: "Consultez vos évaluations",
+      icon: Star,
+      href: "#reviews",
       gradient: "from-indigo-500/20 to-blue-500/10",
       iconColor: "text-indigo-600",
     },

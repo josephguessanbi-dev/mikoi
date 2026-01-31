@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle } from "lucide-react";
+import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle, Crown, Shield, MapPin, Star, Heart, BadgeCheck } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -24,6 +24,13 @@ interface AdminStats {
   activeProperties: number;
   reservedProperties: number;
   totalPoints: number;
+  premiumUsers: number;
+  pendingVerifications: number;
+  totalCities: number;
+  totalFavorites: number;
+  totalReviews: number;
+  monthlyRevenue: number;
+  topCities: { city: string; count: number }[];
 }
 
 interface User {
@@ -56,11 +63,20 @@ interface Transaction {
   created_at: string;
 }
 
+interface PendingVerification {
+  id: string;
+  user_name: string;
+  verification_type: string;
+  status: string;
+  created_at: string;
+}
+
 interface AdminData {
   stats: AdminStats;
   users: User[];
   properties: Property[];
   transactions: Transaction[];
+  pendingVerifications: PendingVerification[];
 }
 
 const Admin = () => {
@@ -173,8 +189,8 @@ const Admin = () => {
           </Badge>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        {/* Statistics Cards - Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -220,12 +236,12 @@ const Admin = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="bg-yellow-500/20 p-3 rounded-full">
-                  <Home className="w-6 h-6 text-yellow-600" />
+                <div className="bg-amber-500/20 p-3 rounded-full">
+                  <Crown className="w-6 h-6 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Réservées</p>
-                  <p className="text-2xl font-bold">{data.stats.reservedProperties}</p>
+                  <p className="text-sm text-muted-foreground">Premium</p>
+                  <p className="text-2xl font-bold">{data.stats.premiumUsers}</p>
                 </div>
               </div>
             </CardContent>
@@ -238,6 +254,79 @@ const Admin = () => {
                   <Coins className="w-6 h-6 text-primary" />
                 </div>
                 <div>
+                  <p className="text-sm text-muted-foreground">Revenus/mois</p>
+                  <p className="text-2xl font-bold">{data.stats.monthlyRevenue.toLocaleString()} F</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Statistics Cards - Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-500/20 p-3 rounded-full">
+                  <BadgeCheck className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Vérifications en attente</p>
+                  <p className="text-2xl font-bold">{data.stats.pendingVerifications}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-purple-500/20 p-3 rounded-full">
+                  <MapPin className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Villes couvertes</p>
+                  <p className="text-2xl font-bold">{data.stats.totalCities}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-red-500/20 p-3 rounded-full">
+                  <Heart className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Favoris</p>
+                  <p className="text-2xl font-bold">{data.stats.totalFavorites}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-yellow-500/20 p-3 rounded-full">
+                  <Star className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Avis</p>
+                  <p className="text-2xl font-bold">{data.stats.totalReviews}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-teal-500/20 p-3 rounded-full">
+                  <Coins className="w-6 h-6 text-teal-600" />
+                </div>
+                <div>
                   <p className="text-sm text-muted-foreground">Points Total</p>
                   <p className="text-2xl font-bold">{data.stats.totalPoints}</p>
                 </div>
@@ -246,12 +335,34 @@ const Admin = () => {
           </Card>
         </div>
 
+        {/* Top Cities */}
+        {data.stats.topCities && data.stats.topCities.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Zones les plus recherchées
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {data.stats.topCities.map((city, index) => (
+                  <Badge key={city.city} variant={index === 0 ? "default" : "secondary"} className="text-sm py-1 px-3">
+                    {city.city} ({city.count} annonces)
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Tabs for different sections */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
             <TabsTrigger value="properties">Annonces</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="verifications">Vérifications</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -390,6 +501,50 @@ const Admin = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="verifications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vérifications en attente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {data.pendingVerifications && data.pendingVerifications.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Utilisateur</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.pendingVerifications.map((verification) => (
+                        <TableRow key={verification.id}>
+                          <TableCell className="font-medium">
+                            {verification.user_name}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{verification.verification_type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{verification.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(verification.created_at).toLocaleDateString("fr-FR")}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Aucune vérification en attente
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

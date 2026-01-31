@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Loader2, User, Phone, Mail, Home, Edit, Trash2, Coins, CheckCircle2, ArrowLeft, Star } from "lucide-react";
 import { BuyPointsButton } from "@/components/BuyPointsButton";
 import { DashboardQuickActions } from "@/components/DashboardQuickActions";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { UserRating } from "@/components/UserRating";
+import { ReviewsList } from "@/components/ReviewsList";
+import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 
 interface Profile {
   full_name: string | null;
@@ -41,6 +45,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [favoritesCount, setFavoritesCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,6 +59,7 @@ const Dashboard = () => {
       fetchProfile();
       fetchProperties();
       fetchUserPoints();
+      fetchFavoritesCount();
     }
   }, [user]);
 
@@ -84,6 +90,20 @@ const Dashboard = () => {
       setUserPoints(data);
     } catch (error) {
       console.error("Error fetching user points:", error);
+    }
+  };
+
+  const fetchFavoritesCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user?.id);
+
+      if (error) throw error;
+      setFavoritesCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching favorites count:", error);
     }
   };
 
@@ -205,6 +225,7 @@ const Dashboard = () => {
             forSale={properties.filter((p) => p.listing_type === "vente").length}
             forRent={properties.filter((p) => p.listing_type === "location").length}
             points={userPoints?.points || 0}
+            favoritesCount={favoritesCount}
           />
         </section>
 
@@ -214,6 +235,7 @@ const Dashboard = () => {
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
               Mes Informations
+              {user && <VerificationBadge userId={user.id} />}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -249,7 +271,28 @@ const Dashboard = () => {
                   <Badge variant="secondary">{profile?.user_type || "Utilisateur"}</Badge>
                 </div>
               </div>
+
+              <div className="flex items-center gap-3 md:col-span-2">
+                <Star className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Ma réputation</p>
+                  {user && <UserRating userId={user.id} />}
+                </div>
+              </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* User Reviews Section */}
+        <Card className="mb-8" id="reviews">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="w-5 h-5" />
+              Avis reçus
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {user && <ReviewsList userId={user.id} />}
           </CardContent>
         </Card>
 
@@ -351,6 +394,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         </div>
+
+        <WhatsAppSupport variant="floating" />
       </div>
     </div>
   );
