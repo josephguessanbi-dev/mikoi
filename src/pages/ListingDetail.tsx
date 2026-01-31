@@ -4,10 +4,15 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Bed, Maximize, Phone, MessageSquare, Heart, Share2 } from "lucide-react";
+import { ArrowLeft, MapPin, Bed, Maximize, Phone, MessageSquare, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { UserRating } from "@/components/UserRating";
+import { ReviewForm } from "@/components/ReviewForm";
+import { ReviewsList } from "@/components/ReviewsList";
+import { useAuth } from "@/contexts/AuthContext";
 interface Property {
   id: string;
   title: string;
@@ -30,11 +35,12 @@ interface OwnerProfile {
 
 const ListingDetail = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [property, setProperty] = useState<Property | null>(null);
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reviewRefresh, setReviewRefresh] = useState(0);
   const { toast } = useToast();
-
   useEffect(() => {
     if (id) fetchProperty();
   }, [id]);
@@ -156,9 +162,7 @@ const ListingDetail = () => {
                 </Badge>
               </div>
               <div className="absolute top-4 right-4 flex gap-2">
-                <Button size="icon" variant="secondary" className="bg-background/90 backdrop-blur-sm">
-                  <Heart className="w-4 h-4" />
-                </Button>
+                <FavoriteButton propertyId={property.id} />
                 <Button size="icon" variant="secondary" className="bg-background/90 backdrop-blur-sm">
                   <Share2 className="w-4 h-4" />
                 </Button>
@@ -232,13 +236,49 @@ const ListingDetail = () => {
                       Message WhatsApp
                     </Button>
                   </div>
-                  {ownerProfile?.phone && (
+                    {ownerProfile?.phone && (
                     <p className="text-sm text-muted-foreground text-center mt-4">
                       Contact: {ownerProfile.phone}
                     </p>
                   )}
                 </CardContent>
               </Card>
+
+              {/* Owner Info Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    Propriétaire
+                    <VerificationBadge userId={property.user_id} />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="font-medium mb-2">{ownerProfile?.full_name || "Utilisateur"}</p>
+                  <UserRating userId={property.user_id} size="sm" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6">Avis sur le propriétaire</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <ReviewsList 
+                  userId={property.user_id} 
+                  refreshTrigger={reviewRefresh} 
+                />
+              </div>
+              {user && user.id !== property.user_id && (
+                <div>
+                  <ReviewForm 
+                    reviewedUserId={property.user_id}
+                    propertyId={property.id}
+                    onSuccess={() => setReviewRefresh(r => r + 1)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
