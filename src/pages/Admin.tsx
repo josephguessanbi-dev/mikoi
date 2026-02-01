@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle, Crown, Shield, MapPin, Star, Heart, BadgeCheck } from "lucide-react";
+import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle, Crown, MapPin, Star, Heart, BadgeCheck } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
 
 interface AdminStats {
   totalUsers: number;
@@ -39,6 +40,7 @@ interface User {
   phone: string | null;
   user_type: string | null;
   points: number;
+  status?: string;
   created_at: string;
 }
 
@@ -368,37 +370,10 @@ const Admin = () => {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>Liste des Utilisateurs</CardTitle>
+                <CardTitle>Gestion des Utilisateurs</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Téléphone</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Points</TableHead>
-                      <TableHead>Inscrit le</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          {user.full_name || "Non renseigné"}
-                        </TableCell>
-                        <TableCell>{user.phone || "-"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{user.user_type || "user"}</Badge>
-                        </TableCell>
-                        <TableCell>{user.points}</TableCell>
-                        <TableCell>
-                          {new Date(user.created_at).toLocaleDateString("fr-FR")}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <AdminUsersTable users={data.users} onRefresh={fetchAdminData} />
               </CardContent>
             </Card>
           </TabsContent>
