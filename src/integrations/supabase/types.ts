@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_entity_id: string | null
+          target_entity_type: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -79,6 +112,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          status: string | null
           updated_at: string
           user_id: string
           user_type: string | null
@@ -88,6 +122,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          status?: string | null
           updated_at?: string
           user_id: string
           user_type?: string | null
@@ -97,6 +132,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          status?: string | null
           updated_at?: string
           user_id?: string
           user_type?: string | null
@@ -350,6 +386,42 @@ export type Database = {
           },
         ]
       }
+      user_suspensions: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          is_permanent: boolean | null
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          suspended_until: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          is_permanent?: boolean | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+          suspended_until?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          is_permanent?: boolean | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+          suspended_until?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_verifications: {
         Row: {
           created_at: string
@@ -392,6 +464,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_warnings: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -411,6 +507,10 @@ export type Database = {
           total_reviews: number
         }[]
       }
+      get_user_warning_count: {
+        Args: { target_user_id: string }
+        Returns: number
+      }
       has_premium_subscription: {
         Args: { target_user_id: string }
         Returns: boolean
@@ -422,6 +522,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_suspended: { Args: { target_user_id: string }; Returns: boolean }
       is_user_verified: { Args: { target_user_id: string }; Returns: boolean }
     }
     Enums: {

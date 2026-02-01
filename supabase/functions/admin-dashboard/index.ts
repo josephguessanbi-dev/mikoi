@@ -116,7 +116,7 @@ serve(async (req) => {
       topCities,
     };
 
-    // Map users with points
+    // Map users with points and status
     const users = profiles.map((profile: any) => {
       const userPoints = points.find((p: any) => p.user_id === profile.user_id);
       return {
@@ -125,6 +125,7 @@ serve(async (req) => {
         phone: profile.phone,
         user_type: profile.user_type,
         points: userPoints?.points || 0,
+        status: profile.status || 'active',
         created_at: profile.created_at,
       };
     });
