@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import { WhatsAppSupport } from "@/components/WhatsAppSupport";
+import TractionReport from "@/components/TractionReport";
 import { ArrowRight, Shield, MapPin, TrendingUp, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-image.jpg";
@@ -204,6 +205,16 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
               </motion.div>
             ))}
+          </motion.div>
+          
+          {/* Traction Report Button */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex justify-center mt-8"
+          >
+            <TractionReport />
           </motion.div>
         </div>
       </section>
