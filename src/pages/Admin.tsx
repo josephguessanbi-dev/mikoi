@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle, Crown, MapPin, Star, Heart, BadgeCheck } from "lucide-react";
+import { Loader2, Users, Home, Coins, TrendingUp, ArrowLeft, AlertCircle, Crown, MapPin, Star, Heart, BadgeCheck, Settings } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
+import HeroImageManager from "@/components/admin/HeroImageManager";
 
 interface AdminStats {
   totalUsers: number;
@@ -360,11 +361,15 @@ const Admin = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
             <TabsTrigger value="properties">Annonces</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="verifications">Vérifications</TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="w-4 h-4 mr-1" />
+              Paramètres
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -522,6 +527,12 @@ const Admin = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <div className="space-y-6">
+              <HeroImageManager />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
