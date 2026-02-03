@@ -50,12 +50,30 @@ const Index = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [stats, setStats] = useState<Stats>({ totalListings: 0, totalCities: 0, totalUsers: 0 });
   const [loading, setLoading] = useState(true);
+  const [dynamicHeroImage, setDynamicHeroImage] = useState<string | null>(null);
   const { t } = useLanguage();
 
   useEffect(() => {
     fetchProperties();
     fetchStats();
+    fetchHeroImage();
   }, []);
+
+  const fetchHeroImage = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "hero_image")
+        .single();
+
+      if (!error && data?.value) {
+        setDynamicHeroImage(data.value);
+      }
+    } catch (error) {
+      console.error("Error fetching hero image:", error);
+    }
+  };
 
   const fetchProperties = async () => {
     try {
@@ -115,7 +133,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/60 to-background/40 z-10" />
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-60"
-          style={{ backgroundImage: `url(${heroImage})` }}
+          style={{ backgroundImage: `url(${dynamicHeroImage || heroImage})` }}
         />
         
         <div className="relative z-20 container mx-auto px-4 py-20 md:py-32">
