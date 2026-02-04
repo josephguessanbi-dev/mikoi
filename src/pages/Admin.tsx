@@ -340,28 +340,35 @@ const Admin = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="properties" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 h-12 p-1 bg-muted/50">
-            <TabsTrigger value="properties" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Home className="w-4 h-4 mr-2" />
-              Annonces
-            </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Users className="w-4 h-4 mr-2" />
-              Utilisateurs
-            </TabsTrigger>
-            <TabsTrigger value="transactions" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Coins className="w-4 h-4 mr-2" />
-              Transactions
-            </TabsTrigger>
-            <TabsTrigger value="verifications" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <BadgeCheck className="w-4 h-4 mr-2" />
-              Vérifications
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Paramètres
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 pb-2">
+            <TabsList className="inline-flex w-auto min-w-full md:w-full md:grid md:grid-cols-5 h-12 p-1 bg-muted/50 gap-1">
+              <TabsTrigger value="properties" className="flex-shrink-0 px-3 md:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Home className="w-4 h-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">Annonces</span>
+                <span className="sm:hidden">Ann.</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex-shrink-0 px-3 md:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Users className="w-4 h-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">Utilisateurs</span>
+                <span className="sm:hidden">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="transactions" className="flex-shrink-0 px-3 md:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Coins className="w-4 h-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">Transactions</span>
+                <span className="sm:hidden">Trans.</span>
+              </TabsTrigger>
+              <TabsTrigger value="verifications" className="flex-shrink-0 px-3 md:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <BadgeCheck className="w-4 h-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">Vérifications</span>
+                <span className="sm:hidden">Vérif.</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex-shrink-0 px-3 md:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Settings className="w-4 h-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">Paramètres</span>
+                <span className="sm:hidden">Param.</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="properties">
             <Card className="border-0 shadow-lg">
