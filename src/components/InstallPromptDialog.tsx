@@ -34,12 +34,12 @@ const InstallPromptDialog = () => {
       return isInstallable;
     };
 
-    // Show after a delay to not interrupt the user immediately
+    // Show after a short delay to not interrupt the user immediately
     const timer = setTimeout(() => {
       if (checkShouldShow()) {
         setIsOpen(true);
       }
-    }, 5000); // 5 seconds delay
+    }, 2000); // 2 seconds delay for faster visibility
 
     return () => clearTimeout(timer);
   }, [isInstallable, isInstalled]);
