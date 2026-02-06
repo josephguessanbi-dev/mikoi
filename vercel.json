@@ -1,15 +1,8 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "public/index.php",
-      "use": "vercel-php@0.6.0"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/public/index.php"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
